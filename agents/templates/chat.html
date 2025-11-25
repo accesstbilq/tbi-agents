@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% load static %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Predict AI — Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* small custom tweaks */
+      .msg-user { background: linear-gradient(90deg,#eef2ff,#fff); }
+      .msg-agent { background: linear-gradient(90deg,#fff,#d8dde2); }
+      .badge { font-size: .75rem; padding:.25rem .5rem; border-radius: .375rem; }
+      .scroll-fade::after {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 5rem;
+        background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1));
+      }
+    </style>
+  </head>
+
+  <body
+    class="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen antialiased text-gray-800">
+    <div class="max-w-6xl mx-auto h-screen grid grid-cols-12 gap-6 p-6">
+      <!-- Sidebar -->
+      <aside class="col-span-3 bg-white p-6 rounded-2xl shadow-sm border">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-semibold">Session Usage</h2>
+            <p class="text-xs text-gray-500">Live token & cost stats</p>
+          </div>
+          <div class="badge bg-indigo-50 text-indigo-700">chat-agent</div>
+        </div>
+
+        <div class="space-y-4">
+          <div
+            class="p-4 rounded-xl bg-gradient-to-r from-white to-gray-50 border">
+            <div class="flex items-baseline justify-between">
+              <div>
+                <div class="text-xs text-gray-500">Used tokens</div>
+                <div id="usedTokens" class="text-3xl font-semibold">0</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-gray-500">Limit</div>
+                <div id="tokenLimit" class="text-lg font-medium">4096</div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div id="usageBar" class="h-3 bg-indigo-500 rounded-full"
+                  style="width:0%"></div>
+              </div>
+              <div class="mt-3 text-xs text-gray-500 flex justify-between">
+                <span id="usagePercent">0%</span>
+                <span id="estimatedCost" class="font-medium">$0.0000</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-white border">
+            <div class="text-xs text-gray-500">Session info</div>
+            <div class="mt-2 text-sm">
+              <div>Mode: <span id="modeBadge"
+                  class="badge bg-green-50 text-green-700">Streaming</span></div>
+              <div class="mt-2">Status: <span id="connStatus"
+                  class="text-sm font-medium text-green-600">connected</span></div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-white border text-sm text-gray-600">
+            <p><strong>Tip:</strong> Messages stream as the agent produces them.
+              Token totals arrive at the end of the run.</p>
+          </div>
+        </div>
+
+        <div class="mt-auto text-xs text-gray-400">
+          <p>Built with LangGraph — streaming SSE endpoint at <code
+              class="text-xs">/api/chat/streaming</code>.</p>
+        </div>
+      </aside>
+
+      <!-- Chat area -->
+      <main class="col-span-9 flex flex-col bg-transparent">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="text-2xl font-bold">TBI AI</h1>
+            <p class="text-sm text-gray-500">Ask anything — the agent will reply
+              and token usage will be shown.</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="clearBtn"
+              class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm">Clear</button>
+            <button id="stopBtn"
+              class="px-4 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-sm hidden">Stop</button>
+          </div>
+        </header>
+
+        <!-- Messages container -->
+        <section id="messagesWrap"
+          class="flex-1 bg-white rounded-2xl p-6 border overflow-hidden relative">
+          <div id="messages"
+            class="flex flex-col gap-4 h-full overflow-y-auto pr-2"
+            style="max-height: 65vh;">
+            <!-- messages appended here -->
+          </div>
+        </section>
+
+        <!-- Composer -->
+
+        <footer class="mt-4">
+          <form id="chatForm"
+            class="bg-white p-4 rounded-xl border shadow-sm flex flex-col gap-3"
+            onsubmit="return startStream(event)">
+
+            <div class="flex items-end gap-3 w-full">
+              <textarea id="messageInput"
+                name="message"
+                rows="1"
+                placeholder="Message Predict AI..."
+                class="flex-1 resize-none overflow-hidden px-4 py-3 rounded-xl border border-gray-300 bg-gray-50
+                       focus:outline-none focus:ring-2 focus:ring-indigo-200 text-[15px] leading-relaxed"
+                autocomplete="off"></textarea>
+
+              <select id="modelSelect"
+                class="px-3 py-2 rounded-lg border text-sm bg-white shadow-sm">
+                <option value="default">Default</option>
+                <option value="fast">Fast</option>
+              </select>
+
+              <button id="sendBtn" type="submit"
+                class="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-xl shadow">
+                Send
+              </button>
+            </div>
+
+            <p class="text-xs text-gray-500 text-center">
+              Press <b>Enter</b> to send • Press <b>Shift + Enter</b> for a new
+              line
+            </p>
+          </form>
+        </footer>
+
+      </main>
+    </div>
+    <script src="{% static 'agents/js/chat.js' %}"></script>
+  </body>
+</html>

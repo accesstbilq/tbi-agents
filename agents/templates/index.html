@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Predict AI — Start Chat</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50 min-h-screen flex items-center justify-center">
+        <main class="w-full max-w-xl p-6">
+            <div class="bg-white shadow-lg rounded-2xl p-8 text-center">
+                <h1 class="text-2xl font-semibold mb-4">Welcome to TBI AI —
+                    Chat</h1>
+                <p class="text-gray-600 mb-6">Start a conversation with our
+                    assistant. One agent will chat with users and another will
+                    send emails when needed.</p>
+
+                <!-- Get Started button should call your start endpoint (example: /start-chat) -->
+                <form id="startForm" action="/start-chat" method="post">
+                    <!-- Include Django CSRF token in server-side rendering: {% csrf_token %} -->
+                    <input type="hidden" name="csrfmiddlewaretoken"
+                        value="{{ csrf_token }}" />
+
+                    <button id="startBtn" type="submit"
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200">
+                        <!-- simple icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                            viewBox="0 0 20 20" fill="currentColor"><path
+                                fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-11.5v5.793L13.146 9.146a.5.5 0 11.708.708l-4 4a.5.5 0 01-.708 0l-4-4a.5.5 0 11.708-.708L9 12.293V6.5a.5.5 0 011 0z"
+                                clip-rule="evenodd" /></svg>
+                        Get Started — Chat
+                    </button>
+                </form>
+
+                <p class="text-sm text-gray-500 mt-6">Tip: Use this UI to open
+                    the chat screen where you can talk to the agent and see
+                    token usage.</p>
+            </div>
+        </main>
+    </body>
+</html>
