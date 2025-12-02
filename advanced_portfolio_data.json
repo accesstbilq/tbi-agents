@@ -1,116 +1,187 @@
-[
-  {
-    "url": "https://www.brihaspatitech.com/portfolio/saas-platform-for-corporate-phishing-training-simulation/",
-    "title": "SaaS Platform for Corporate Phishing Training & Simulation",
+{
+  "project": {
+    "title": "SaaS Solution Elevates Gatsby’s Influencer Game",
+    "client": "Gatsby",
+    "platform_url": "https://gatsby.ai/",
+    "shopify_app_url": "https://apps.shopify.com/gatsby",
+    "industry": "Influencer Marketing / eCommerce / Social-to-CRM Automation",
+    "categories": ["Influencer Marketing", "Social/Community", "Software / SaaS", "Ecommerce", "Shopify App"],
+    "overview": "Built a full-featured SaaS platform (Gatsby) that helps Shopify merchants convert social media engagement (Instagram, TikTok) into customer data and influencer-driven growth — enabling merchants to discover, manage and automate micro-influencer and ambassador programs, with deep integrations across marketing, loyalty, CRM and automation tools.",
+    "core_value_proposition": {
+      "social_to_subscriber_conversion": "Convert Instagram/TikTok followers into email & SMS subscribers to grow marketing lists directly from social engagement. :contentReference[oaicite:1]{index=1}",
+      "influencer_discovery_from_customers": "Automatically identify customers or site visitors who qualify as micro-influencers (based on follower-count, social reach, bio keywords, engagement) — enabling micro-influencer campaigns without manual outreach. :contentReference[oaicite:2]{index=2}",
+      "UGC & Social Interaction Tracking": "Track Instagram/TikTok content associated with your brand; gather engagement metrics & media assets in a unified dashboard. :contentReference[oaicite:3]{index=3}",
+      "Marketing / CRM / Loyalty / Automation Integration": "Seamlessly integrate with marketing & loyalty tools like email/SMS (e.g. Klaviyo, Attentive), loyalty & rewards (e.g. LoyaltyLion, Yotpo), CRM/marketing automation (e.g. HubSpot, Omnisend) — enabling automated flows for influencer onboarding, rewards, follow-ups and sales tracking. :contentReference[oaicite:4]{index=4}",
+      "Ambassador Program Automation & Performance Analytics": "Allow merchants to run automated ambassador / UGC / referral programs: detect influencers, send them dynamic coupon/referral/loyalty codes, track their social posts & UGC, measure conversions & revenue, and manage communication — saving manual work and scaling authenticity. :contentReference[oaicite:5]{index=5}"
+    },
     "tech_stack": {
-      "Frontend": [
-        "React"
-      ],
-      "Backend": [
-        "Node"
-      ],
-      "Database": [
-        "MongoDB"
-      ],
-      "Infrastructure": [
-        "AWS"
+      "frontend_backend": "React JS / Node JS",
+      "database": "PostgreSQL",
+      "integrations_supported": [
+        "Klaviyo",
+        "Gorgias",
+        "Attentive",
+        "LoyaltyLion",
+        "Yotpo",
+        "Yotpo SmsBump",
+        "Stamped",
+        "Talkable",
+        "HubSpot",
+        "Omnisend",
+        "Sailthru",
+        "Zapier / Webhooks",
+        "WhiteLabelLoyalty",
+        "Sendlane"
       ]
     },
-    "sections": [
+    "integrations": [
       {
-        "heading": "Project Overview",
-        "content": "The project aimed to develop a SaaS platform designed to prevent phishing attacks. Built with a multi-tenant architecture, the platform offers a scalable and secure solution for corporate organizations of all sizes, each with a separate environment. The platform empowers businesses to proactively protect themselves by training employees to identify and prevent phishing attacks, fostering a culture of cybersecurity awareness. Client Sam Ardren Industry Cybersecurity"
+        "name": "Klaviyo",
+        "url": "https://www.klaviyo.com/login",
+        "status": "integrated",
+        "role": "Email/SMS marketing & list growth from social"
       },
       {
-        "heading": "Tech Stack",
-        "content": "Technology React Js/NodeJs 3rd-Party Integrations Google MFA/Nylas API Database MongoDB"
+        "name": "Gorgias",
+        "url": "https://gatsbydev.gorgias.com/login",
+        "status": "integrated",
+        "role": "Customer support / helpdesk — connects social & UGC data with support workflow"
       },
       {
-        "heading": "Action Plan",
-        "content": "The client required a tailored multi-tenant SaaS platform with a Learning Management System (LMS) and Phishing Simulator. Our Agile Development team successfully implemented key features, including user roles, domain verification, integration of third-party APIs for email campaigns, and secure logins. Following are the key elements of our development plan: Intuitive Dashboard with ReactJs & Node Js User Roles and Access Levels Core Functionality Scalable SaaS Architecture Reports & Analytics Integrating APIs Let’s have a closer at each of them:"
+        "name": "Attentive",
+        "url": "https://ui.attentivemobile.com/signin",
+        "status": "integrated",
+        "role": "SMS marketing / automation"
       },
       {
-        "heading": "Intuitive Dashboard with ReactJs & NodeJs",
-        "content": "We built a fast, real-time, and interactive dashboard with ReactJs and a robust, seamless backend powered by NodeJs."
+        "name": "LoyaltyLion",
+        "url": "https://app.loyaltylion.com/login",
+        "status": "integrated",
+        "role": "Loyalty & rewards / ambassador/referral program support"
       },
       {
-        "heading": "User Roles and Access Levels",
-        "content": "The platform has 3 distinct user roles: Super Admin, Admin, and Employees."
+        "name": "Yotpo",
+        "url": "https://login.yotpo.com/#/login?product=sms",
+        "status": "integrated",
+        "role": "Reviews / UGC / loyalty / referral"
       },
       {
-        "heading": "Super Admin (Platform Owner):",
-        "content": "Full Access: Manage platform settings, templates, and user management (companies, admins, employees). Content Management: Upload and manage training content, including courses, videos, and quizzes. Template Creation: Create and customize phishing templates (text, logos, and background colors). Analytics: Can view detailed analytics (unique opens, clicks, replies)."
+        "name": "YotpoSmsBump",
+        "url": "https://login.yotpo.com/#/login?product=settings",
+        "status": "integrated",
+        "role": "SMS & marketing automation (via Yotpo stack)"
       },
       {
-        "heading": "Admin (Companies/Clients):",
-        "content": "Platform Access: Admins log in with Multi-Factor Authentication and can select either LMS or Simulation. Employee Management: Manage employees (add via manual entry or CSV uploads). Campaign Management: Schedule, initiate and assign phishing campaigns. Analytics & Reports: Assign courses to employees, track results, and analyze performance."
+        "name": "Stamped",
+        "url": "https://stamped.io/account/signin",
+        "status": "integrated",
+        "role": "Reviews / UGC / loyalty / social proof & reputation"
       },
       {
-        "heading": "Employees:",
-        "content": "Course Access: Employees access courses via email links and complete quizzes. Phishing Simulation: They receive phishing simulation emails, and their actions are tracked. Notifications: Notifications are sent for enrollment, reminders, and completion. Results Tracking: Admins track employee performance in courses and simulations."
+        "name": "Talkable",
+        "url": "https://www.talkable.com/login",
+        "status": "integrated",
+        "role": "Referral / sharing / ambassador campaigns"
       },
       {
-        "heading": "Template Editor:",
-        "content": "Lets Super Admins customize phishing simulation templates. They can customize the logo, text, and background colors on training templates. They can save modified templates for future campaigns, ensuring flexibility and reusability."
+        "name": "HubSpot",
+        "url": "https://app.hubspot.com/login",
+        "status": "integrated",
+        "role": "CRM, omnichannel marketing automation"
       },
       {
-        "heading": "Core Functionality",
-        "content": "The platform has 2 functioning Modules: Learning Management Systems and Phishing Stimulator."
+        "name": "Omnisend",
+        "url": "https://app.omnisend.com/login",
+        "status": "integrated",
+        "role": "Email/SMS marketing automation"
       },
       {
-        "heading": "Learning Management System (LMS)",
-        "content": "For educational purposes where employees can learn about phishing attacks. Super Admin can upload and manage training courses. Admins can view training courses and share with employees. Employees can access the courses and attempt quizzes."
+        "name": "Sailthru",
+        "url": "https://login.sailthru.com/u/login/identifier?state=...",
+        "status": "integrated",
+        "role": "Email marketing / customer segmentation / personalization"
       },
       {
-        "heading": "Phishing Simulator for Training",
-        "content": "Admins can initiate one-time or recurring phishing campaigns for employees. Admin can send simulated phishing emails, tracks responses, and provides analytics on employee interactions (e.g., opens, clicks, replies). Super Admin creates phishing templates, which Admins can customize for their simulations."
+        "name": "Zapier",
+        "url": null,
+        "status": "pending_client_access",
+        "role": "Workflow automation / custom integrations / webhook orchestration"
       },
       {
-        "heading": "Scalable SaaS Platform",
-        "content": "We designed a scalable, secure multi-tenant platform that ensures separate data management for each client/company."
+        "name": "Webhooks",
+        "url": "integration page",
+        "status": "configured",
+        "role": "Custom triggers, event-based automation for non-standard workflows"
       },
       {
-        "heading": "Scalability & Performance Optimization",
-        "content": "Scalability: The platform utilizes AWS auto-scaling features to dynamically adjust its resources based on real-time usage demands. Growth Accommodation: With the auto-scaling mechanism, the platform seamlessly accommodates an increasing number of clients without compromising performance."
+        "name": "WhiteLabelLoyalty",
+        "url": "https://auth.wlloyalty.net/u/login?state=...",
+        "status": "integrated",
+        "role": "White-label loyalty/rewards program integration"
       },
       {
-        "heading": "GIT Security",
-        "content": "We use Git to track changes in the source code, enabling multiple users to collaborate on non-linear development. Track code changes with Git logs and use encrypted connections to keep code secure. GIT ensures proper access and protects sensitive data."
-      },
-      {
-        "heading": "Integrating APIs",
-        "content": "We integrated Google MFA for secure logins and Nylas Email API for efficient email campaign management."
-      },
-      {
-        "heading": "Google MFA (Multi-Factor Authentication)",
-        "content": "Integrated Google MFA to add an extra layer of security for user logins, requiring both a password and a time-sensitive code. Prevents unauthorized access by ensuring only authenticated users can log in. Users receive the code via mobile or authenticator app for elevated security."
-      },
-      {
-        "heading": "Email API (Nylas)",
-        "content": "Nylas Email API enables sending and managing email campaigns directly from the platform. Tracks email events like opens, clicks, and replies for insights into user engagement. Automates sending training and phishing simulation emails, ensuring timely communication and reliable delivery."
-      },
-      {
-        "heading": "Reports & Analytics",
-        "content": "We implemented robust domain verification, reporting tools, and analytics to enhance security and track performance."
-      },
-      {
-        "heading": "Domain Verification",
-        "content": "Used TXT records to confirm email domain ownership. Ensures only authorized logins. Prevented misuse of the platform by verifying domain legitimacy."
-      },
-      {
-        "heading": "Reporting Tools",
-        "content": "Developed tools to tracks employee performance in LMS (course completion, quizzes). Maintain campaign effectiveness through unique opens, clicks, and replies. Analytics to identify gaps and behavior patterns."
-      },
-      {
-        "heading": "Result: A SaaS Solution for Phishing Awareness and Prevention",
-        "content": "The project has delivered measurable results in educating employees on phishing awareness. Over the past year, the platform has provided a scalable, secure solution that streamlines training, tracks performance, and supports multi-tenancy, enabling the client to expand its customer base and drive revenue growth. By cultivating a culture of phishing awareness, businesses are better equipped to defend against cyber threats and build a more secure future."
-      },
-      {
-        "heading": "Ready to Discuss?",
-        "content": "Share your project details and get a tailored proposal for your business. Get Started"
+        "name": "Sendlane",
+        "url": "https://auth.sendlane.com/login",
+        "status": "integrated",
+        "role": "Email/SMS marketing automation / lifecycle messaging"
       }
     ],
-    "rag_context": "# Project: SaaS Platform for Corporate Phishing Training & Simulation\n\n## Tech Stack Detected\n{\n  \"Frontend\": [\n    \"React\"\n  ],\n  \"Backend\": [\n    \"Node\"\n  ],\n  \"Database\": [\n    \"MongoDB\"\n  ],\n  \"Infrastructure\": [\n    \"AWS\"\n  ]\n}\n\n## Project Overview\nThe project aimed to develop a SaaS platform designed to prevent phishing attacks. Built with a multi-tenant architecture, the platform offers a scalable and secure solution for corporate organizations of all sizes, each with a separate environment. The platform empowers businesses to proactively protect themselves by training employees to identify and prevent phishing attacks, fostering a culture of cybersecurity awareness. Client Sam Ardren Industry Cybersecurity\n\n## Tech Stack\nTechnology React Js/NodeJs 3rd-Party Integrations Google MFA/Nylas API Database MongoDB\n\n## Action Plan\nThe client required a tailored multi-tenant SaaS platform with a Learning Management System (LMS) and Phishing Simulator. Our Agile Development team successfully implemented key features, including user roles, domain verification, integration of third-party APIs for email campaigns, and secure logins. Following are the key elements of our development plan: Intuitive Dashboard with ReactJs & Node Js User Roles and Access Levels Core Functionality Scalable SaaS Architecture Reports & Analytics Integrating APIs Let’s have a closer at each of them:\n\n## Intuitive Dashboard with ReactJs & NodeJs\nWe built a fast, real-time, and interactive dashboard with ReactJs and a robust, seamless backend powered by NodeJs.\n\n## User Roles and Access Levels\nThe platform has 3 distinct user roles: Super Admin, Admin, and Employees.\n\n## Super Admin (Platform Owner):\nFull Access: Manage platform settings, templates, and user management (companies, admins, employees). Content Management: Upload and manage training content, including courses, videos, and quizzes. Template Creation: Create and customize phishing templates (text, logos, and background colors). Analytics: Can view detailed analytics (unique opens, clicks, replies).\n\n## Admin (Companies/Clients):\nPlatform Access: Admins log in with Multi-Factor Authentication and can select either LMS or Simulation. Employee Management: Manage employees (add via manual entry or CSV uploads). Campaign Management: Schedule, initiate and assign phishing campaigns. Analytics & Reports: Assign courses to employees, track results, and analyze performance.\n\n## Employees:\nCourse Access: Employees access courses via email links and complete quizzes. Phishing Simulation: They receive phishing simulation emails, and their actions are tracked. Notifications: Notifications are sent for enrollment, reminders, and completion. Results Tracking: Admins track employee performance in courses and simulations.\n\n## Template Editor:\nLets Super Admins customize phishing simulation templates. They can customize the logo, text, and background colors on training templates. They can save modified templates for future campaigns, ensuring flexibility and reusability.\n\n## Core Functionality\nThe platform has 2 functioning Modules: Learning Management Systems and Phishing Stimulator.\n\n## Learning Management System (LMS)\nFor educational purposes where employees can learn about phishing attacks. Super Admin can upload and manage training courses. Admins can view training courses and share with employees. Employees can access the courses and attempt quizzes.\n\n## Phishing Simulator for Training\nAdmins can initiate one-time or recurring phishing campaigns for employees. Admin can send simulated phishing emails, tracks responses, and provides analytics on employee interactions (e.g., opens, clicks, replies). Super Admin creates phishing templates, which Admins can customize for their simulations.\n\n## Scalable SaaS Platform\nWe designed a scalable, secure multi-tenant platform that ensures separate data management for each client/company.\n\n## Scalability & Performance Optimization\nScalability: The platform utilizes AWS auto-scaling features to dynamically adjust its resources based on real-time usage demands. Growth Accommodation: With the auto-scaling mechanism, the platform seamlessly accommodates an increasing number of clients without compromising performance.\n\n## GIT Security\nWe use Git to track changes in the source code, enabling multiple users to collaborate on non-linear development. Track code changes with Git logs and use encrypted connections to keep code secure. GIT ensures proper access and protects sensitive data.\n\n## Integrating APIs\nWe integrated Google MFA for secure logins and Nylas Email API for efficient email campaign management.\n\n## Google MFA (Multi-Factor Authentication)\nIntegrated Google MFA to add an extra layer of security for user logins, requiring both a password and a time-sensitive code. Prevents unauthorized access by ensuring only authenticated users can log in. Users receive the code via mobile or authenticator app for elevated security.\n\n## Email API (Nylas)\nNylas Email API enables sending and managing email campaigns directly from the platform. Tracks email events like opens, clicks, and replies for insights into user engagement. Automates sending training and phishing simulation emails, ensuring timely communication and reliable delivery.\n\n## Reports & Analytics\nWe implemented robust domain verification, reporting tools, and analytics to enhance security and track performance.\n\n## Domain Verification\nUsed TXT records to confirm email domain ownership. Ensures only authorized logins. Prevented misuse of the platform by verifying domain legitimacy.\n\n## Reporting Tools\nDeveloped tools to tracks employee performance in LMS (course completion, quizzes). Maintain campaign effectiveness through unique opens, clicks, and replies. Analytics to identify gaps and behavior patterns.\n\n## Result: A SaaS Solution for Phishing Awareness and Prevention\nThe project has delivered measurable results in educating employees on phishing awareness. Over the past year, the platform has provided a scalable, secure solution that streamlines training, tracks performance, and supports multi-tenancy, enabling the client to expand its customer base and drive revenue growth. By cultivating a culture of phishing awareness, businesses are better equipped to defend against cyber threats and build a more secure future.\n\n## Ready to Discuss?\nShare your project details and get a tailored proposal for your business. Get Started\n\n",
-    "timestamp": "2025-12-01T18:29:07.302557"
+    "key_features": {
+      "social_signup_capture": "Allow Instagram/TikTok followers to subscribe via DMs or popups — converting social audience into owned email & SMS lists. :contentReference[oaicite:6]{index=6}",
+      "UGC_media_tracking": "Track UGC: posts, stories, reels, mentions, tags, DMs, comments; aggregate media assets + engagement metrics; allow downloadable content. :contentReference[oaicite:7]{index=7}",
+      "Influencer_scoring_and_segmentation": "Based on follower count, engagement, bio keywords — produce a ‘G Score’ to identify ideal micro-influencers / ambassadors. :contentReference[oaicite:8]{index=8}",
+      "Automated Ambassador & Influencer Campaigns": "Trigger flows based on social events (e.g. story mentions, tags, DMs) — auto-reply, send discount / referral / loyalty codes, enroll in ambassador programs. :contentReference[oaicite:9]{index=9}",
+      "Integration with Email/SMS, Loyalty, CRM, Reviews & Automation Tools": "Connect social/customer data to marketing stack — enabling segmentation, flows, loyalty enrollment, UGC reviews, referrals. :contentReference[oaicite:10]{index=10}",
+      "Engagement & Revenue Analytics": "Track influencer performance: engagement metrics, social reach, UGC conversions, sales from referrals/discounts — to measure ROI of influencer campaigns. :contentReference[oaicite:11]{index=11}",
+      "Flexible Setup (Popups, Forms, Checkout, Custom Forms)": "Supports multiple ways to collect social handles — via popups, checkout fields (Shopify Plus), custom forms, etc. :contentReference[oaicite:12]{index=12}"
+    },
+    "pricing_plans": {
+      "from_shopify_app_store": [
+        {
+          "plan": "Starter",
+          "price_usd_per_month": 229,
+          "target_brands": "brands with <50k followers",
+          "free_trial_days": 7
+        },
+        {
+          "plan": "Standard",
+          "price_usd_per_month": 579,
+          "target_brands": "brands with 50k+ followers",
+          "free_trial_days": 7,
+          "includes_10000_email_sms_subscribers": true,
+          "additional_subscriber_pricing": "USD 16 / 500 additional subscribers"
+        }
+      ]
+    },
+    "project_scope": {
+      "full_saas_platform": true,
+      "public_shopify_app": true,
+      "multi-integration_support": true,
+      "automation_flows": true,
+      "analytics_dashboard": true,
+      "UGC_and_social_media_analytics": true,
+      "influencer_management": true,
+      "loyalty_and_reward_systems": true
+    },
+    "observed_use_cases_and_workflows": [
+      "Social follower → DM / popup subscribe → email/SMS list growth",
+      "Identify customers with high social reach → automatic influencer scoring → send invite via email/SMS/referral coupon → track UGC + purchases → reward influencer/referrer",
+      "Ambassador/referral program via loyalty/rewards integration (LoyaltyLion, WhiteLabelLoyalty, etc.)",
+      "Collect product reviews & UGC via Yotpo/Stamped + integrate with CRM and marketing automation",
+      "CRM and customer support integration (e.g. HubSpot, Gorgias) to combine social data with support history and loyalty status",
+      "Automation via Zapier / Webhooks for custom flows where pre-built integrations are insufficient"
+    ],
+    "source": {
+      "portfolio_page_url": "https://www.brihaspatitech.com/portfolio/saas-solution-elevates-gatsbys-influencer-game/",
+      "gatsby_official_url": "https://gatsby.ai/",
+      "shopify_app_url": "https://apps.shopify.com/gatsby",
+      "about_gatsby_url": "https://gatsby.ai/",
+      "platform_features_url": "https://gatsby.ai/",
+      "public_blog_posts": [
+        "https://gatsby.ai/blog/post/successful-influencer-marketing-strategy-for-shopify",
+        "https://gatsby.ai/blog/gatsby-2.0-is-here",
+        "https://gatsby.ai/blog/post/gatsby-launches-new-shopify-pos-loyalty-rewards-extension"
+      ]
+    }
   }
-]
+}

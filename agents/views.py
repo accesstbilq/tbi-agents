@@ -17,6 +17,33 @@ from .services.message_agent import create_message_agent
 from .services.email_agent import create_email_agent
 from .services.supervisor import create_supervisor_agent
 
+# Initialize langchain short memory
+if os.getenv("ENV_TYPE") == 'localhost':
+    DB_URI = os.getenv("POSTGRES_URL")
+else:
+    DB_URI = os.getenv("POSTGRES_URL_PROD")
+
+# Initialize connection pool
+connection_pool = ConnectionPool(DB_URI, min_size=1, max_size=5)
+
+def init_checkpointer():
+    with connection_pool.connection() as conn:
+        conn.autocommit = True
+        checkpointer = PostgresSaver(conn)
+        checkpointer.setup()
+        print("INIT CHECKPOINTER #####")
+
+
+# Call once at startup
+try:
+    init_checkpointer()
+except Exception as e:
+    print(f"⚠ Warning during checkpointer init: {e}")
+    # Don't crash the app - tables might already exist
+
+
+
+
 # LOAD ENV VARIABLE
 load_dotenv()
 
@@ -36,26 +63,6 @@ def chatbot_view(request: HttpRequest):
     """Render chatbot page"""
     return render(request, "chat.html")
 
-
-# Initialize langchain short memory
-DB_URI = "postgresql://postgres:P0stGr%40123@192.168.1.30:5432/service_advisor_db"
-
-connection_pool = ConnectionPool(DB_URI, min_size=1, max_size=5)
-
-def init_checkpointer():
-    # Use autocommit=True to avoid transaction block
-    with connection_pool.connection() as conn:
-        conn.autocommit = True
-        checkpointer = PostgresSaver(conn)
-        checkpointer.setup()  # Create tables on first run
-        print("✓ Checkpointer initialized successfully")
-
-# Call once at startup
-try:
-    init_checkpointer()
-except Exception as e:
-    print(f"⚠ Warning during checkpointer init: {e}")
-    # Don't crash the app - tables might already exist
 
 @csrf_exempt
 @require_POST
@@ -86,7 +93,8 @@ def chat_asistance(request: HttpRequest):
         supervisor_agent = create_supervisor_agent(model, message_agent, checkpointer)
 
         agent_input = {
-            "messages": [HumanMessage(content=user_message)]
+            "messages": [HumanMessage(content=user_message)],
+            "user_message": user_message
         }
         
         try:

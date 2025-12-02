@@ -1,18 +1,13 @@
 import re
 import json
-import requests
-
-from typing import List, Dict, Optional, Set
+import traceback
+from typing import List, Dict, Any
 from datetime import datetime
-from bs4 import BeautifulSoup, NavigableString, Tag
 
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from pathlib import Path
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import ChatOpenAI
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,239 +15,259 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 CHROMA_DB_PATH = BASE_DIR / "agents/chroma_db"
 JSON_FILE = BASE_DIR / "advanced_portfolio_data.json"
+COLLECTION_NAME = "project_portfolio"
 
-llm = ChatOpenAI(model="gpt-4o-mini")  # or your model
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+# FIXED: Use consistent embedding model
+embeddings = OpenAIEmbeddings(model="text-embedding-3-large")  # 3072 dimensions
 
 
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,
-    chunk_overlap=150,
-    separators=["\n\n", "\n", ". ", " "],
-)
-
-embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-
-vectorstore = Chroma(
-    collection_name="tbi_portfolio",
-    embedding_function=embeddings,
-    persist_directory=str(CHROMA_DB_PATH),
-)
-
-class AdvancedPortfolioScraper:
-    """
-    Robust scraper that dynamically detects sections and formats data 
-    specifically for RAG (Retrieval Augmented Generation) systems.
-    """
+def build_taxonomy_chunks_from_project_json(project_json: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Generate 5 taxonomy chunks from project JSON"""
     
-    def __init__(self):
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        # Expanded tech list for better recall
-        self.tech_keywords = {
-            "Frontend": ["React", "React.js", "Vue", "Vue.js", "Angular", "Next.js", "Nuxt", "Tailwind", "Bootstrap", "Redux"],
-            "Backend": ["Node.js", "Node", "Express", "Python", "Django", "Flask", "PHP", "Laravel", "Java", "Spring"],
-            "Database": ["MongoDB", "PostgreSQL", "MySQL", "Redis", "Firebase", "Supabase"],
-            "Infrastructure": ["AWS", "Docker", "Kubernetes", "Azure", "GCP", "Nginx", "CI/CD"],
-            "CMS/Ecom": ["Shopify", "WordPress", "Magento", "WooCommerce", "BigCommerce", "Liquid"],
-            "API": ["GraphQL", "REST", "Stripe", "PayPal", "Google Maps API", "Twilio"]
-        }
+    prompt = f"""
+    You are a Top 1% AI Engineer. Analyze ONLY the provided Project Portfolio JSON.
 
-    def scrape_portfolio(self, json_data: str) -> Optional[Dict]:
-        print(f"🕷️ Scraping: {json_data.get('url')}")
+    📌 **STRICT RULES:**
+    1. Use **only** information found in `project_json`.  
+    2. Do NOT infer or create imaginary details.  
+    3. Reference actual project names, descriptions, technologies from JSON.
+    4. Keep writing concise and factual.
 
-        
-        if not json_data:
-            return None
+    ## 🎯 **Generate 5 Master Taxonomies:**
+    1. **Technical_Capability**  
+    2. **Domain_Expertise**  
+    3. **Business_Impact_Trust**  
+    4. **Engagement_Hiring**  
+    5. **Process_Communication**
 
-        # 1. Basic Metadata
-        title = json_data.get('title')
-        
-        # 2. Extract Generic Sections (The "Safe" Way)
-        sections = json_data.get('sections')
-        
-        # 3. Extract Full Text for Tech Scanning
-        tech_stack = json_data.get('tech_stack')
+    ## ✅ **OUTPUT FORMAT:**
+    [
+    {{
+        "content": "<One paragraph strictly based on project_json>",
+        "metadata": {{
+        "category": "<One of the 5 taxonomy categories>",
+        "sub_type": "<Short label extracted from JSON>",
+        "keywords": ["List", "Of", "Exact", "Phrases"],
+        "project_ref": "<Project name from JSON>"
+        }}
+    }},
+    ...
+    ]
 
-        # 4. Construct RAG-Optimized Document
-        # We create a single markdown string that is perfect for embedding.
-        rag_context = f"# Project: {title}\n\n"
-        rag_context += f"## Tech Stack Detected\n{json.dumps(tech_stack, indent=2)}\n\n"
-        
-        for section in sections:
-            # Skip empty or redundant sections
-            if len(section['content']) < 10: continue
-            rag_context += f"## {section['heading']}\n{section['content']}\n\n"
+    ## 📌 **Input Project Portfolio:**
+    {json.dumps(project_json, indent=2)}
+
+    Generate the taxonomy chunks now.
+    """
+
+    try:
+        llm_response = llm.invoke(prompt)
+    except Exception as e:
+        raise RuntimeError(f"LLM invocation failed: {e}")
+
+    raw = llm_response.content.strip()
+
+    # Extract JSON
+    json_text = None
+    array_match = re.search(r"(\[\s*\{.*\}\s*\])", raw, flags=re.DOTALL)
+    if array_match:
+        json_text = array_match.group(1)
+    else:
+        obj_match = re.search(r"(\{\s*\"content\".*\}\s*)", raw, flags=re.DOTALL)
+        if obj_match:
+            json_text = f"[{obj_match.group(1)}]"
+
+    if not json_text:
+        try:
+            parsed_try = json.loads(raw)
+            taxonomy_list = [parsed_try] if isinstance(parsed_try, dict) else parsed_try
+        except:
+            raise ValueError(f"Could not parse JSON from LLM output:\n{raw}")
+    else:
+        try:
+            parsed = json.loads(json_text)
+            taxonomy_list = [parsed] if isinstance(parsed, dict) else parsed
+        except json.JSONDecodeError:
+            # Cleanup and retry
+            cleaned = json_text.replace(""", "\"").replace(""", "\"")
+            cleaned = re.sub(r",\s*}", "}", cleaned)
+            cleaned = re.sub(r",\s*]", "]", cleaned)
+            try:
+                parsed = json.loads(cleaned)
+                taxonomy_list = [parsed] if isinstance(parsed, dict) else parsed
+            except:
+                raise ValueError(f"Failed to parse JSON:\n{json_text}")
+
+    # Validate
+    required_categories = {
+        "Technical_Capability",
+        "Domain_Expertise",
+        "Business_Impact_Trust",
+        "Engagement_Hiring",
+        "Process_Communication",
+    }
+
+    seen_categories = set()
+    validated_chunks: List[Dict[str, Any]] = []
+
+    def _validate_item(item: Any) -> Dict[str, Any]:
+        if not isinstance(item, dict):
+            raise ValueError("Each entry must be a dict")
+
+        if "content" not in item or "metadata" not in item:
+            raise ValueError("Missing 'content' or 'metadata'")
+
+        content = item["content"]
+        metadata = item["metadata"]
+
+        if not isinstance(content, str) or not content.strip():
+            raise ValueError("'content' must be non-empty string")
+
+        if not isinstance(metadata, dict):
+            raise ValueError("'metadata' must be dict")
+
+        for k in ("category", "sub_type", "keywords", "project_ref"):
+            if k not in metadata:
+                raise ValueError(f"Missing metadata.{k}")
+
+        category = metadata["category"]
+        if category not in required_categories:
+            raise ValueError(f"Invalid category: {category}")
 
         return {
-            "url": json_data.get('url'),
-            "title": title,
-            "tech_stack": tech_stack,
-            "sections": sections,
-            "rag_context": rag_context, # <--- THIS IS WHAT YOU EMBED
-            "timestamp": datetime.now().isoformat()
+            "content": content.strip(),
+            "metadata": {
+                "category": category,
+                "sub_type": metadata["sub_type"].strip(),
+                "keywords": [k.strip() for k in metadata["keywords"] if k.strip()],
+                "project_ref": metadata["project_ref"].strip(),
+            },
         }
 
-    def save_to_json(self, data: List[Dict], filename: str):
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f"✅ Data saved to {filename}")
+    for item in taxonomy_list:
+        validated = _validate_item(item)
+        cat = validated["metadata"]["category"]
+        seen_categories.add(cat)
+        validated_chunks.append(validated)
 
-def section_to_chunk_docs(section_doc: Document) -> list[Document]:
-    # for item in section_doc:
-        chunks = text_splitter.split_text(section_doc.page_content)
-        chunk_docs = []
+    missing = required_categories - seen_categories
+    if missing:
+        raise ValueError(f"Missing categories: {sorted(list(missing))}")
 
-        for i, chunk in enumerate(chunks):
-            md = section_doc.metadata.copy()
-            md.update({
-                "chunk_index": i,
-                "chunk_id": f"{md['project_title']}::chunk-{i}",
-            })
-
-            chunk_docs.append(
-                Document(
-                    page_content=chunk,
-                    metadata=md,
-                )
-            )
-        return chunk_docs
+    return validated_chunks
 
 
-def summarize_section(section_doc: Document) -> Document:
-    prompt = f"""
-    Summarize the following project section in 2–3 sentences, focusing on
-    what was built and why it matters to the client.
-
-    Section title: {section_doc.metadata.get('section_heading')}
-    Content:
-    {section_doc.page_content}
-    """
-    summary = llm.invoke(prompt).content.strip()
-
-    md = section_doc.metadata.copy()
-    md.update({
-        "is_summary": True,
-        "chunk_index": 0,
-        # "chunk_id": f"{md['section_id']}::summary",
-    })
-
-    return Document(page_content=summary, metadata=md)
-
-
-def upsert_section(section_doc: Document):
-    # Make chunks
-    chunk_docs = section_to_chunk_docs(section_doc)
-    summary_doc = summarize_section(section_doc)
-
-    all_docs = chunk_docs + [summary_doc]
-
-    # ids = [d.metadata["chunk_id"] for d in all_docs]
-
-    print("\n📌 Total Documents:", len(all_docs))
-    print([doc for doc in all_docs])
+def convert_to_documents(taxonomy_chunks: List[Dict[str, Any]]) -> List[Document]:
+    """Convert taxonomy chunks to LangChain Documents"""
+    documents = []
+    
+    for chunk in taxonomy_chunks:
+        doc = Document(
+            page_content=chunk["content"],
+            metadata={
+                "category": chunk["metadata"]["category"],
+                "sub_type": chunk["metadata"]["sub_type"],
+                "keywords": ", ".join(chunk["metadata"]["keywords"]),
+                "project_ref": chunk["metadata"]["project_ref"],
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        documents.append(doc)
+    
+    return documents
 
 
-    # vectorstore.add_documents(
-    #     documents=all_docs,
-    #     ids=ids,
-    # )
-    # vectorstore.persist()
+def upsert_documents_to_vectorstore(documents: List[Document]) -> None:
+    """Upsert documents to Chroma vector store with dimension matching"""
+    if not documents:
+        print("❌ No documents to upsert")
+        return
 
+    try:
+        print(f"\n💾 Upserting {len(documents)} documents to vector store...")
 
-def load_and_process_data():
+        vectorstore = Chroma(
+            collection_name=COLLECTION_NAME,
+            embedding_function=embeddings,
+            persist_directory=str(CHROMA_DB_PATH),
+        )
 
-    scraper = AdvancedPortfolioScraper()
-    results = []
-
-    with open(JSON_FILE, "r", encoding="utf-8") as f:
-        portfolio_json = json.load(f)
-
-    print(f"\n🚀 Starting Advanced Extraction...")
-    data = scraper.scrape_portfolio(portfolio_json[0])
-    if data:
-        results.append(data)
-
-    processed_docs = []
-
-    for project in results:
-        # 1. Extract Global Project Metadata
-        # We attach this to EVERY chunk so we can filter later (e.g., "Show me only React projects")
+        vectorstore.delete_collection()
         
-        # Flatten the tech stack dict into a single list for metadata filtering
-        # From: {"Frontend": ["React"], "Backend": ["Node"]} 
-        # To: "React, Node"
-        all_tech = []
-        if isinstance(project.get("tech_stack"), dict):
-            for category, items in project["tech_stack"].items():
-                all_tech.extend(items)
-        flat_tech_string = ", ".join(all_tech)
-
-        project_title = project.get("title", "Unknown")
-        project_url = project.get("url", "")
-
-        # 2. STRATEGY: Semantic Section Chunking
-        # Instead of one big doc, we create a specific doc for EACH section.
+        vectorstore = Chroma(
+            collection_name=COLLECTION_NAME,
+            embedding_function=embeddings,  # Uses text-embedding-3-large (3072)
+            persist_directory=str(CHROMA_DB_PATH),
+        )
         
-        for section in project.get("sections", []):
-            section_heading = section.get("heading", "")
-            section_content = section.get("content", "")
+        # Add documents - Chroma handles embeddings with correct dimension
+        vectorstore.add_documents(documents=documents)
+        
+        print(f"✅ Successfully upserted {len(documents)} documents!")
+        print(f"📊 Collection: {COLLECTION_NAME}")
+        print(f"📁 Directory: {CHROMA_DB_PATH}")
+        print(f"🔢 Embedding dimension: 3072 (text-embedding-3-large)")
+        
+    except Exception as e:
+        print(f"❌ Error upserting documents: {e}")
+        print(traceback.format_exc())
+        raise
 
-            # Skip noise (empty sections)
-            if len(section_content) < 15:
-                continue
 
-            # 3. CRITICAL: Context Injection
-            # A chunk saying "We used AWS Lambda" is useless without knowing WHICH project it was.
-            # We prepend the Project Title to the content.
-            
-            clean_content = re.sub(r'\s+', ' ', section_content).strip()
+def load_and_process_data() -> None:
+    """Load JSON, generate taxonomy, convert to docs, upsert to vector store"""
+    print(f"🚀 Starting Advanced Portfolio Extraction...")
+    
+    # Load JSON
+    try:
+        with open(JSON_FILE, "r", encoding="utf-8") as f:
+            portfolio_json = json.load(f)
+        print(f"✅ Loaded portfolio data from {JSON_FILE}")
+    except FileNotFoundError:
+        print(f"❌ JSON file not found: {JSON_FILE}")
+        return
+    except json.JSONDecodeError as e:
+        print(f"❌ Invalid JSON: {e}")
+        return
 
-            # 2. Skip "Call to Action" sections (Noise Filtering)
-            # You don't want the AI to index "Ready to Discuss?" or "Contact Us" 
-            # because it dilutes real technical answers.
-            noise_headers = ["Ready to Discuss?", "Get Started", "Contact Us", "Newsletter"]
-            if any(noise in section_heading for noise in noise_headers):
-                continue 
+    # Generate taxonomy
+    try:
+        print("\n🤖 Generating taxonomy chunks with LLM...")
+        taxonomy_chunks = build_taxonomy_chunks_from_project_json(portfolio_json)
+        print(f"✅ Generated {len(taxonomy_chunks)} taxonomy chunks")
+        print("\n📋 Taxonomy Chunks:")
+        print(json.dumps(taxonomy_chunks, indent=2))
+    except Exception as e:
+        print(f"❌ Error generating taxonomy: {e}")
+        print(traceback.format_exc())
+        return
 
-            enhanced_content = f"""
-            Project: {project_title}
-            Topic: {section_heading}
-            Tech: {flat_tech_string}
-            -----------------------
-            {clean_content}
-            """
+    # Convert to documents
+    try:
+        print("\n📄 Converting chunks to documents...")
+        documents = convert_to_documents(taxonomy_chunks)
+        print(f"✅ Converted {len(documents)} chunks to documents")
+        
+        for i, doc in enumerate(documents, 1):
+            print(f"\nDocument {i}:")
+            print(f"  Content: {doc.page_content[:80]}...")
+            print(f"  Metadata: {doc.metadata}")
+    except Exception as e:
+        print(f"❌ Error converting chunks: {e}")
+        print(traceback.format_exc())
+        return
 
-            project_slug = project_url.split("/")[-2]
+    # Upsert to vector store
+    try:
+        upsert_documents_to_vectorstore(documents)
+    except Exception as e:
+        print(f"❌ Error upserting to vector store: {e}")
+        return
 
-            # 4. Create the Document
-            doc = Document(
-                page_content=enhanced_content, # The AI reads this
-                 metadata={
-                    # Document-level identifiers
-                    "doc_id": f"portfolio::{project_slug}",           # e.g. "portfolio::saas-phishing-training"
-                    "source": project_url,
-                    "project_title": project_title,
-                    "project_slug": project_slug,                     # slugified title
-                    "section_heading": section_heading,                 # human-readable
+    print("\n✅ Portfolio processing complete!")
 
-                    # Domain-specific filters
-                    # "tech_stack": tech_stack_list,                    # list of techs, not just flat string
-                    # "industry": industry,
-                    # "client_name": client_name,
-                    # "tags": tags_list,                                # e.g. ["ReactJs", "NodeJs", "Cybersecurity"]
-
-                    # Control fields
-                    "is_summary": False,
-                    "source_type": "portfolio",
-                    "version": 1,
-                }
-            )
-            processed_docs.append(doc)
-
-    upsert_section(processed_docs[0])
-    print("PROCESSED DOCUMENT ####", len(processed_docs))
-    return processed_docs
 
 
 load_and_process_data()

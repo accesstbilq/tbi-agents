@@ -109,7 +109,7 @@ function appendBubble(author, text, meta = '') {
     // avatar
     const avatar = document.createElement('div');
     avatar.className = 'chat-avatar';
-    avatar.textContent = '≋'; // you can change to emoji or icon
+    avatar.innerHTML = '<img src="/static/agents/images/logo.png">'; // you can change to emoji or icon
 
     // right side (card + footer)
     const right = document.createElement('div');

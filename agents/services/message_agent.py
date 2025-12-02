@@ -1,146 +1,189 @@
 from langchain.agents import create_agent
-from langchain_core.tools import tool
+from langchain.tools import tool, ToolRuntime
+from langchain_core.messages import SystemMessage
+from langchain.agents.middleware import before_model
 from langchain_core.messages import HumanMessage
 
-@tool
-def generate_professional_message(topic: str, recipient: str = "General", tone: str = "professional") -> str:
+from dataclasses import dataclass
+
+@dataclass
+class AgentContext:
+    rag_context: str      # Actual knowledge content
+    has_rag_data: bool
+
+
+def create_rag_context_middleware():
     """
-    Generate a professional message for a given topic.
-    
-    Args:
-        topic: The subject matter of the message
-        recipient: Who the message is for (e.g., "client", "manager", "team")
-        tone: The tone of the message (professional, friendly, formal, casual)
-    
-    Returns:
-        A well-written message
+    Middleware that injects RAG context into the system message.
+    This runs BEFORE the model is called, so context is available.
     """
-    return f"""
-Generated {tone} message for {recipient}:
-
-Subject: {topic}
-
-Dear {recipient},
-
-[Message content about {topic} in {tone} tone]
-
-Thank you for your attention to this matter.
-
-Best regards
-"""
-
-@tool
-def generate_greeting_message(name: str, context: str = "") -> str:
-    """
-    Generate a greeting or welcome message.
     
-    Args:
-        name: The name of the person to greet
-        context: Additional context for the greeting
+    @before_model
+    def inject_rag_context(request, runtime: ToolRuntime[AgentContext]) -> str:
+        """Inject RAG context into system message dynamically"""
+        
+       # ✅ CORRECT: Access context from request.runtime.context
+        rag_context = runtime.context.rag_context
+        has_rag_data = runtime.context.has_rag_data
+        
+        print(f"[MIDDLEWARE] Injecting RAG context ({len(rag_context)} chars, has_data={has_rag_data})")
+        
+        # Build dynamic context instruction
+        if has_rag_data:
+            rag_instruction = f"""
+            ## RAG CONTEXT - USE THIS INFORMATION:
+
+            {rag_context}
+
+            ---
+
+            Instructions for using the above context:
+            - Answer the client's question using ONLY the provided RAG context above
+            - Be specific and cite details from the knowledge base
+            - Never speculate beyond what's in the context
+            - If the question isn't covered, say so professionally
+            """
+        else:
+            rag_instruction = """
+            ## NO KNOWLEDGE BASE AVAILABLE
+
+            You do not have specific information for this query in our knowledge base.
+            - Do NOT make up information or guess
+            - Politely inform the client: "We don't have specific information on this in our system"
+            - Suggest: "I'd recommend contacting our team directly for accurate details"
+            - Keep the tone professional and helpful
+            """
+        
+        # Modify the system message to include RAG context
+        # original_system_msg = request.system_message
+        
+        # if original_system_msg:
+        #     # Append RAG context to existing system message
+        #     new_content = str(original_system_msg.content) + "\n" + rag_instruction
+        #     new_system_msg = SystemMessage(content=new_content)
+        # else:
+        #     # Create new system message with RAG context
+        #     new_system_msg = SystemMessage(content=rag_instruction)
+        
+        # Update request with modified system message
+        return {
+            "messages": [SystemMessage(content=rag_instruction)],
+        }
+        
     
-    Returns:
-        A personalized greeting message
-    """
-    return f"Hello {name},\n\nWelcome! {context}\n\nWe're excited to work with you."
+    return inject_rag_context
 
-@tool
-def generate_follow_up_message(previous_topic: str, action_items: str = "") -> str:
-    """
-    Generate a follow-up message based on a previous conversation.
-    
-    Args:
-        previous_topic: What was discussed previously
-        action_items: Any action items to mention
-    
-    Returns:
-        A professional follow-up message
-    """
-    return f"""
-Follow-up Message:
-
-I wanted to follow up on our discussion about {previous_topic}.
-
-As we discussed, here are the action items:
-{action_items}
-
-Please let me know if you have any questions.
-
-Best regards
-"""
-
-@tool
-def generate_summary_message(meeting_points: str) -> str:
-    """
-    Generate a summary message from meeting points.
-    
-    Args:
-        meeting_points: Key points from a meeting
-    
-    Returns:
-        A formatted summary message
-    """
-    return f"""
-Meeting Summary:
-
-Key Discussion Points:
-{meeting_points}
-
-Next Steps:
-- Review the action items assigned
-- Provide feedback by next meeting
-- Contact me with any questions
-
-Thank you for attending.
-"""
 
 def create_message_agent(model, checkpointer):
     """
-    Create a message generation agent.
+    Create a message generation agent that grounds responses in RAG context.
+    
+    When RAG context is available: Answer ONLY from provided knowledge
+    When RAG context is empty: Decline to answer and request more info
     
     Args:
-        model: Language model to use (ChatOpenAI, ChatAnthropic, etc.)
+        model: Language model (ChatOpenAI, etc.)
         checkpointer: Optional checkpointer for persistence
     
     Returns:
-        Compiled agent ready for message generation tasks
+        Compiled agent with context-aware grounding
     """
     
-    tools = [
-        generate_professional_message,
-        generate_greeting_message,
-        generate_follow_up_message,
-        generate_summary_message,
-    ]
-    
     system_prompt = """
-You are an expert message writing assistant. Your job is to help users generate well-written, 
-professional messages for various purposes.
+    You are an AI Customer Success & Project Consultation Assistant for Brihaspati Infotech.
+    You have 6+ years of experience in client communication and technical consultation.
 
-When a user asks you to generate a message:
-1. Understand the context and purpose
-2. Determine the appropriate tone (professional, friendly, formal, etc.)
-3. Identify the recipient or audience
-4. Use the appropriate tool to generate the message
-5. If needed, refine or customize the output
+    ⚠️ CRITICAL INSTRUCTIONS - FOLLOW STRICTLY:
 
-You have access to tools for:
-- Professional messages for clients and managers
-- Greeting and welcome messages
-- Follow-up messages after meetings or conversations
-- Summary messages from meetings
+    ## Context-Based Behavior:
 
-Always ensure messages are:
-- Clear and concise
-- Appropriately formal or casual based on context
-- Free of spelling and grammar errors
-- Well-structured and easy to read
-"""
+    ### IF you have RAG_CONTEXT (knowledge base data is available):
+    1. Use ONLY information from the provided RAG_CONTEXT
+    2. Answer the client's question based strictly on available knowledge
+    3. Be confident and specific in your response
+    4. Cite relevant details from the knowledge base
+    5. DO NOT speculate beyond what's in RAG_CONTEXT
     
+    ### IF you have NO RAG_CONTEXT (knowledge base is empty):
+    1. DO NOT guess, assume, or hallucinate
+    2. Politely inform the client: "We don't have specific information on this in our system"
+    3. Suggest asking via email or scheduling a call with the team
+    4. Keep the tone professional and helpful
+    5. Example response:
+       "I appreciate your question about [topic]. Unfortunately, I don't have detailed information 
+        about that in our system right now. I'd recommend connecting with our team directly via 
+        [email] or scheduling a call. They can provide you with accurate, customized guidance."
+
+    ## Your Responsibilities:
+    1. Understand the client's intent and business context
+    2. Identify what the client is asking:
+       - Requirements clarification
+       - Timeline / cost inquiry
+       - Technical consultation
+       - Project feasibility check
+       - Status update
+       - Feature explanation
+       - Post-delivery support, etc.
+    
+    3. Respond professionally:
+       - Professional, polite, and client-friendly
+       - Confident and clear
+       - Zero hallucinations (this is critical!)
+       - No assumptions beyond provided context
+       - Solution-driven and value-focused
+
+    ## Communication Principles:
+    - Maintain a helpful, positive, and consultative tone
+    - Use simple but expert-level language
+    - Break information into clear sections when helpful
+    - Identify missing information and ask clarifying questions
+    - When no context is available, be honest about limitations
+    - Use conditional phrasing for unknowns: "Based on what we have, we can...", "To better help you, we'd need..."
+    - Never guess about technologies, services, or capabilities not in the knowledge base
+
+    ## Tasks You Perform:
+    - Writing professional client emails/chats
+    - Explaining technical solutions in simple terms
+    - Gathering requirements politely
+    - Providing estimates (conditional, not commitments)
+    - Rewriting/refining messages for clarity
+    - Creating proposals and follow-ups
+    - Suggesting best-fit technologies (from known capabilities)
+    - Explaining development processes and expectations
+
+    ## Style & Tone:
+    - Friendly but professional
+    - Confident but not pushy
+    - Helpful and solution-oriented
+    - Adapt tone based on client mood
+
+    ## Output Standards:
+    - Clear and specific
+    - Grammatically correct
+    - Directly helpful
+    - Tailored to development agency context
+    - Grounded in available knowledge
+
+    ## FINAL WARNING:
+    If the client asks about something NOT in RAG_CONTEXT:
+    ❌ DO NOT make up details
+    ❌ DO NOT assume we offer that service
+    ❌ DO NOT hallucinate capabilities
+    ✅ DO say "We don't have specific information on this"
+    ✅ DO direct them to contact the team
+    ✅ DO maintain professionalism
+    """
+
+    # Create middleware that injects RAG context
+    rag_middleware = create_rag_context_middleware()
+    
+    # Create agent with context schema
     agent = create_agent(
         model=model,
-        tools=tools,
         system_prompt=system_prompt,
-        checkpointer=checkpointer
+        context_schema=AgentContext,
+        middleware=[rag_middleware],
+        checkpointer=checkpointer,
     )
     
     return agent

@@ -26,9 +26,6 @@ def stream_generator(
     # Token usage tracking
     prompt_tokens = 0
     completion_tokens = 0
-    full_response_text = ""
-    all_messages = []
-    message_buffer = ""  # Buffer for accumulating response tokens
 
     try:
         print(f"[DEBUG] Starting agent stream with config: {config}")
